@@ -75,4 +75,51 @@ def initial_population():
 
     return training_data
 
-initial_population()
+def neural_network_model(input_size):
+    model = Sequential()
+    #network = input_data(shape = [None, input_size, 1], name='input')
+    model.add(Dense(units=128, input_shape=(input_size, )))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.8))
+
+    model.add(Dense(units=256))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.8))
+
+    model.add(Dense(units=512))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.8))
+
+    model.add(Dense(units=256))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.8))
+
+    model.add(Dense(units=128))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.8))
+
+    model.add(Dense(units=2))
+    model.add(Activation('softmax'))
+
+    model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+    return model
+
+
+#initial_population()
+training_data = np.load(TRAINING_DATA_FILENAME)
+print(training_data.shape)
+print(training_data[0][0].shape)
+print(training_data[0][1])
+
+X = np.array([i[0] for i in training_data]).reshape(len(training_data), 4)
+y = np.array([i[1] for i in training_data]).reshape(len(training_data), 2)
+#print(X[0:2, :])
+#print(y.shape)
+#X = np.array([i[0] for i in training_data]).reshape(-1, len(training_data[0][0]), 1)
+#y = np.array([i[1] for i in training_data]).reshape(len(training_data), 2, 1)
+#print(y.shape)
+model = neural_network_model(len(X[0]))
+model.fit(X, y, epochs=5, batch_size=128)

@@ -8,8 +8,7 @@ from collections import Counter
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout
 
-TRAINING_DATA_FILENAME = 'training_data_cart_pole.npy'
-learningRate = 1e-3
+TRAINING_DATA_FILENAME = 'training_data_cart_pole2.npy'
 
 env = gym.make('CartPole-v0')
 env.reset()
@@ -73,30 +72,29 @@ def initial_population():
     print('Median:', median(accepted_scores))
     print(Counter(accepted_scores))
 
-    return training_data
+    return training_data_save
 
 def neural_network_model(input_size):
     model = Sequential()
-    #network = input_data(shape = [None, input_size, 1], name='input')
     model.add(Dense(units=128, input_shape=(input_size, )))
     model.add(Activation('relu'))
     model.add(Dropout(0.8))
 
-    model.add(Dense(units=256))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.8))
+    #model.add(Dense(units=256))
+    #model.add(Activation('relu'))
+    #model.add(Dropout(0.8))
 
-    model.add(Dense(units=512))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.8))
+    #model.add(Dense(units=512))
+    #model.add(Activation('relu'))
+    #model.add(Dropout(0.8))
 
-    model.add(Dense(units=256))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.8))
+    #model.add(Dense(units=256))
+    #model.add(Activation('relu'))
+    #model.add(Dropout(0.8))
 
-    model.add(Dense(units=128))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.8))
+    #model.add(Dense(units=128))
+    #model.add(Activation('relu'))
+    #model.add(Dropout(0.8))
 
     model.add(Dense(units=2))
     model.add(Activation('softmax'))
@@ -109,17 +107,40 @@ def neural_network_model(input_size):
 
 
 #initial_population()
-training_data = np.load(TRAINING_DATA_FILENAME)
+training_data = initial_population() # np.load(TRAINING_DATA_FILENAME)
 print(training_data.shape)
 print(training_data[0][0].shape)
 print(training_data[0][1])
 
 X = np.array([i[0] for i in training_data]).reshape(len(training_data), 4)
 y = np.array([i[1] for i in training_data]).reshape(len(training_data), 2)
-#print(X[0:2, :])
-#print(y.shape)
-#X = np.array([i[0] for i in training_data]).reshape(-1, len(training_data[0][0]), 1)
-#y = np.array([i[1] for i in training_data]).reshape(len(training_data), 2, 1)
-#print(y.shape)
 model = neural_network_model(len(X[0]))
-model.fit(X, y, epochs=5, batch_size=128)
+model.fit(X, y, epochs=3)
+
+scores = []
+choices = []
+
+for game in range(10):
+    score = 0
+    game_memory = []
+    prev_obs = []
+    env.reset()
+    for _ in range(goal_steps):
+        env.render()
+        if len(prev_obs) == 0:
+            action = random.randrange(0, 2)
+        else:
+            prediction = model.predict(prev_obs.reshape(1, len(prev_obs)))
+            action = np.argmax(model.predict(prev_obs.reshape(1, len(prev_obs))))
+        choices.append(action)
+
+        new_obs, reward, done, info = env.step(action)
+        prev_obs = new_obs
+        game_memory.append([new_obs, action])
+        score += reward
+        if done:
+            break
+    scores.append(score)
+
+print('Average score', sum(scores)/len(scores))
+print('Choice 1', choices.count(1)/len(choices), 'Choice 0', choices.count(0)/len(choices))
